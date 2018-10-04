@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import com.example.ano.articledaily.Adapter.MusicAdapter;
 import com.example.ano.articledaily.Bean.MusicBean;
 import com.example.ano.articledaily.R;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -27,6 +29,8 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MusicFrag extends Fragment {
@@ -72,6 +76,16 @@ public class MusicFrag extends Fragment {
 
                         String musicURL = element.select(".box_list_img")
                                 .attr("abs:href");
+
+                        Connection connection=Jsoup.connect(musicURL);
+                        Document doc=connection.get();
+                        String swfurl=doc.body().select(".p_file").select("embed").attr("src");
+                        Pattern pattern=Pattern.compile("=(.*?)&");
+                        Matcher matcher=pattern.matcher(swfurl);
+                        if(matcher.find())
+                        {
+                            musicURL=new String(Base64.decode(matcher.group(1),Base64.DEFAULT));
+                        };
                         MusicBean music = new MusicBean(title, author, imgURL, musicURL);
                         musicBeanList.add(music);
                         handler.sendEmptyMessage(1);

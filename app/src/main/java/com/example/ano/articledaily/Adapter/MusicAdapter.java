@@ -2,6 +2,7 @@ package com.example.ano.articledaily.Adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.ano.articledaily.Bean.MusicBean;
+import com.example.ano.articledaily.MusicList;
 import com.example.ano.articledaily.R;
 
 
@@ -24,6 +26,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
     private List<MusicBean> list;
 
     static class ViewHolder extends RecyclerView.ViewHolder{
+        View musicView;
         CardView cardView;
         ImageView image;
         TextView musicName;
@@ -32,6 +35,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
         ViewHolder(View view)
         {
             super(view);
+            musicView=view;
             cardView=(CardView) view;
             image=(ImageView)view.findViewById(R.id.music_image);
             musicName=(TextView)view.findViewById(R.id.music_name);
@@ -53,7 +57,18 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
             context=parent.getContext();
         }
         View view=LayoutInflater.from(context).inflate(R.layout.music_item,parent,false);
-        return new ViewHolder(view);
+        final ViewHolder holder=new ViewHolder(view);
+        holder.musicView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position=holder.getAdapterPosition();
+                MusicBean musicBean=list.get(position);
+                Intent intent=new Intent(context,MusicList.class);
+                intent.putExtra("music",musicBean);
+                context.startActivity(intent);
+            }
+        });
+        return holder;
     }
 
     @SuppressLint("SetTextI18n")
