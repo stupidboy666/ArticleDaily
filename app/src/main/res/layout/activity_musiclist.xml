@@ -16,9 +16,9 @@
         app:cardCornerRadius="4dp">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
 
             <ImageView
@@ -48,14 +48,13 @@
 
     <SeekBar
         android:id="@+id/skbProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="37dp"
         android:layout_gravity="center_vertical"
         android:layout_weight="1.0"
         android:max="100"
         android:paddingLeft="10dip"
-        android:paddingRight="10dip" >
-    </SeekBar>
+        android:paddingRight="10dip"></SeekBar>
 
     <LinearLayout
         android:layout_width="match_parent"
