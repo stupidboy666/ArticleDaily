@@ -45,7 +45,7 @@ public class ArticleFra extends Fragment {
                         if (msg.what == 1) {
                             title.setText(at.getTitle());
                             article.setText(at.getContent());
-                            author.setText(at.getAuthour());
+                            author.setText(at.getAuthour()+"\n");
                         }
                     }
                 };
@@ -86,7 +86,7 @@ public class ArticleFra extends Fragment {
                 if (msg.what == 1) {
                     title.setText(at.getTitle());
                     article.setText(at.getContent());
-                    author.setText(at.getAuthour());
+                    author.setText(at.getAuthour()+"\n");
                     article.setMovementMethod(ScrollingMovementMethod.getInstance());
                 }
             }
