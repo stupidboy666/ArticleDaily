@@ -2,6 +2,7 @@ package com.example.ano.articledaily;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -15,12 +16,18 @@ import com.example.ano.articledaily.Bean.Artical;
 
 import org.litepal.LitePal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 public class watched extends AppCompatActivity {
 
     private List<Artical> list;
+    List<Artical>bookedlist=new ArrayList<>();
     boolean booked;
+    ArticleAdapter articleAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +41,19 @@ public class watched extends AppCompatActivity {
         RecyclerView recyclerView=(RecyclerView)findViewById(R.id.articl_recycler);
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        ArticleAdapter articleAdapter=new ArticleAdapter(list);
+        if(booked){
+            for (Artical artical:list)
+            {
+                if(artical.booked){
+                    bookedlist.add(artical);
+                }
+            }
+            articleAdapter=new ArticleAdapter(bookedlist);
+        }
+        else {
+            articleAdapter=new ArticleAdapter(list);
+        }
+
         recyclerView.setAdapter(articleAdapter);
 
     }

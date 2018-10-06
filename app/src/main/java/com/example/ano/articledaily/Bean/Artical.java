@@ -11,7 +11,7 @@ public class Artical extends LitePalSupport{
     public String title;
     public String authour;
     public String content;
-    
+    public boolean booked=false;
 
     public Artical(){
     }
@@ -21,6 +21,10 @@ public class Artical extends LitePalSupport{
         this.authour=authour;
         this.content=content;
         this.title=title;
+    }
+
+    public void setBooked(boolean booked) {
+        this.booked = booked;
     }
 
     public String getTitle() {

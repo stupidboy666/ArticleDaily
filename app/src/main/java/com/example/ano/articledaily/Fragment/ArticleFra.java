@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ano.articledaily.Bean.Artical;
 import com.example.ano.articledaily.Bean.Book;
@@ -37,7 +38,37 @@ public class ArticleFra extends Fragment {
         final TextView article = (TextView) view.findViewById(R.id.content);
         final TextView author = (TextView) view.findViewById(R.id.article_author);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab);
+
+        final FloatingActionButton addfab=view.findViewById(R.id.fab1);
+        addfab.setEnabled(false);
+        if(at.booked){
+            addfab.setImageResource(R.drawable.ic_done);
+        }else {
+            addfab.setImageResource(R.drawable.add);
+        }
+
+        addfab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<Artical> list=LitePal.findAll(Artical.class);
+                for (Artical arti:list)
+                {
+                    if(arti.title.equals(title.getText()))
+                    {
+                        if (arti.booked){
+                            arti.setToDefault("booked");
+                            addfab.setImageResource(R.drawable.add);
+                        }else {
+                            arti.booked=true;
+                            addfab.setImageResource(R.drawable.ic_done);
+                        }
+                        arti.updateAll("title=?",arti.title);
+                    }
+                }
+            }
+        });
+
+        FloatingActionButton fab = view.findViewById(R.id.fab2);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,6 +79,7 @@ public class ArticleFra extends Fragment {
                             title.setText(artical.getTitle());
                             article.setText(artical.getContent());
                             author.setText(artical.getAuthour()+"\n");
+                            addfab.setEnabled(true);
                         }
                     }
                 };
@@ -98,6 +130,7 @@ public class ArticleFra extends Fragment {
                     article.setText(at.getContent());
                     author.setText(at.getAuthour()+"\n");
                     article.setMovementMethod(ScrollingMovementMethod.getInstance());
+                    addfab.setEnabled(true);
                 }
             }
         };
