@@ -22,6 +22,8 @@ import com.example.ano.articledaily.Fragment.ArticleFra;
 import com.example.ano.articledaily.Fragment.BooksFrag;
 import com.example.ano.articledaily.Fragment.MusicFrag;
 
+import org.litepal.LitePal;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
          * init the viewpager date
          */
         InitView();
+        LitePal.initialize(this);
 
         //set the drawerlayout
        Toolbar toolbar=(Toolbar)findViewById(R.id.tool_bar);
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
-        
+
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     case R.id.booked:
                         Intent intent=new Intent(context,watched.class);
+                        intent.putExtra("booked",true);
                         startActivity(intent);
                         break;
                     case R.id.nav_watched:

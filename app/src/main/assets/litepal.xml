@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<litepal>
+    <dbname value="Articles"></dbname>
+    <version value="1"/>
+
+    <list>
+        <mapping class="com.example.ano.articledaily.Bean.Artical"/>
+        <mapping class="com.example.ano.articledaily.Bean.MusicBean"/>
+    </list>
+</litepal>

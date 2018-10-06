@@ -1,5 +1,6 @@
 package com.example.ano.articledaily;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,7 @@ import java.util.List;
 public class watched extends AppCompatActivity {
 
     private List<Artical> list;
+    boolean booked;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,7 +28,9 @@ public class watched extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
+        Intent intent=getIntent();
+        booked=(boolean)intent.getBooleanExtra("booked",false);
+        list=LitePal.findAll(Artical.class);
         RecyclerView recyclerView=(RecyclerView)findViewById(R.id.articl_recycler);
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);

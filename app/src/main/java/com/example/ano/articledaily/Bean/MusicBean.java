@@ -7,7 +7,7 @@ import org.litepal.crud.LitePalSupport;
 
 import java.io.Serializable;
 
-public class MusicBean  implements Serializable
+public class MusicBean extends LitePalSupport implements Serializable
 {
     public String author;
     String musicURL;

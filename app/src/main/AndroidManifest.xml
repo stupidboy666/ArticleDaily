@@ -23,6 +23,7 @@
         </activity>
         <activity android:name=".MusicList" />
         <activity android:name=".Bookshow"></activity>
+        <activity android:name=".watched"/>
     </application>
 
 </manifest>

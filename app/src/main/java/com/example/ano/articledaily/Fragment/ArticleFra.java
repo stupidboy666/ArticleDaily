@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.ano.articledaily.Bean.Artical;
+import com.example.ano.articledaily.Bean.Book;
 import com.example.ano.articledaily.R;
 
 import org.jsoup.Connection;
@@ -19,14 +20,15 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.litepal.LitePal;
 
 import java.io.IOException;
 import java.util.List;
 
 
 public class ArticleFra extends Fragment {
+    private boolean exits;
     private com.example.ano.articledaily.Bean.Artical at = new Artical();
-
     String url = "http://www.meiriyiwen.com";
 
     public View onCreateView(LayoutInflater inflater, ViewGroup containter, Bundle saveIntanceState) {
@@ -39,13 +41,13 @@ public class ArticleFra extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                final Artical artical=new Artical();
                 final Handler handler = new Handler() {
                     public void handleMessage(Message msg) {
                         if (msg.what == 1) {
-                            title.setText(at.getTitle());
-                            article.setText(at.getContent());
-                            author.setText(at.getAuthour()+"\n");
+                            title.setText(artical.getTitle());
+                            article.setText(artical.getContent());
+                            author.setText(artical.getAuthour()+"\n");
                         }
                     }
                 };
@@ -54,24 +56,32 @@ public class ArticleFra extends Fragment {
                     @Override
                     public void run() {
                         try {
+
                             Connection connection = Jsoup.connect("http://www.meiriyiwen.com/random");
                             connection.timeout(10000);
                             Document document = connection.get();
 
                             Elements read_con = document.select("div#article_show");
                             String title = read_con.first().getElementsByTag("h1").text();
-                            at.title = title;
+                            artical.title = title;
 
                             Elements select1 = read_con.select("p.article_author");
                             String author = select1.first().text();
-                            at.authour = author;
+                            artical.authour = author;
 
                             Elements select = read_con.select("div.article_text>p");
                             StringBuilder stringBuilder = new StringBuilder();
                             for (Element element : select) {
                                 stringBuilder.append("  ").append(element.text()).append("\n\n");
                             }
-                            at.content = stringBuilder.toString();
+                            artical.content = stringBuilder.toString();
+                            List<Artical> list=LitePal.findAll(Artical.class);
+                            for(Artical artical:list)
+                            {
+                                if (artical.title.equals(title)) {exits=true;}
+                            }
+                            if(!exits) artical.save();
+                            exits=false;
                             handler.sendEmptyMessage(1);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -115,6 +125,15 @@ public class ArticleFra extends Fragment {
                         stringBuilder.append("  ").append(element.text()).append("\n\n");
                     }
                     at.content = stringBuilder.toString();
+                    List<Artical> list=LitePal.findAll(Artical.class);
+                    for(Artical artical:list)
+                    {
+                        if(artical.title.equals(title)){
+                            exits=true;
+                        }
+                    }
+                    if(!exits) at.save();
+                    exits=false;
                     handler.sendEmptyMessage(1);
                 } catch (IOException e) {
                     e.printStackTrace();
