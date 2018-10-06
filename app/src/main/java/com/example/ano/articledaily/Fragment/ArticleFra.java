@@ -76,6 +76,7 @@ public class ArticleFra extends Fragment {
                 final Handler handler = new Handler() {
                     public void handleMessage(Message msg) {
                         if (msg.what == 1) {
+                            addfab.setImageResource(R.drawable.add);
                             title.setText(artical.getTitle());
                             article.setText(artical.getContent());
                             author.setText(artical.getAuthour()+"\n");
@@ -163,6 +164,7 @@ public class ArticleFra extends Fragment {
                     {
                         if(artical.title.equals(title)){
                             exits=true;
+                            at.booked=artical.booked;
                         }
                     }
                     if(!exits) at.save();

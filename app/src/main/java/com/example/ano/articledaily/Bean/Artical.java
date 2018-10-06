@@ -4,10 +4,11 @@ package com.example.ano.articledaily.Bean;
 import org.litepal.LitePal;
 import org.litepal.crud.LitePalSupport;
 
+import java.io.Serializable;
 import java.lang.invoke.VolatileCallSite;
 import java.util.List;
 
-public class Artical extends LitePalSupport{
+public class Artical extends LitePalSupport implements Serializable {
     public String title;
     public String authour;
     public String content;

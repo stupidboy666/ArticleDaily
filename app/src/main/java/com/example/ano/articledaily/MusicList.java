@@ -2,13 +2,17 @@ package com.example.ano.articledaily;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -21,6 +25,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.CursorTreeAdapter;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -33,6 +38,7 @@ import com.example.ano.articledaily.Bean.MusicBean;
 
 import com.example.ano.articledaily.Player.DownloadAsync;
 import com.example.ano.articledaily.Player.MusicPlayer;
+import com.example.ano.articledaily.Service.MusicService;
 import com.yhd.hdmediaplayer.MediaPlayerHelper;
 
 import org.jsoup.Connection;
@@ -50,12 +56,24 @@ public class MusicList extends AppCompatActivity {
     ImageView imageView;
     TextView name,author;
     FloatingActionButton play;
-    MediaPlayer mediaPlayer;
+    MediaPlayer mediaPlayer=new MediaPlayer();
     long downloadID;
-    String downloadPath,filename;
-    Boolean exits=false;
-    String Url;
-    Timer timer;
+    public static String downloadPath,filename;
+    Boolean exits;
+    SeekBar Progress;
+    private boolean isplaying =true;
+    private Context context=this;
+
+    private Button button;
+
+    private Handler handler=new Handler();
+    private Runnable runnable=new Runnable() {
+        @Override
+        public void run() {
+            Progress.setProgress(musicBinder.getProgress());
+            handler.post(runnable);
+        }
+    };
 
 
     @Override
@@ -66,11 +84,16 @@ public class MusicList extends AppCompatActivity {
         Intent intent=getIntent();
         musicBean=(MusicBean)intent.getSerializableExtra("music");
 
-        initView();
         getPermission();
-        initUrl();
-        initMediaPlayer();
+        initView();
 
+        File file=new File(downloadPath+filename);
+        exits=file.exists();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         //new thread to download
         new Thread(new Runnable() {
@@ -79,28 +102,8 @@ public class MusicList extends AppCompatActivity {
                 download();
             }
         }).start();
-
-
     }
 
-
-    public void download() {
-
-        DownloadManager.Request req = new DownloadManager.Request(Uri.parse(musicBean.getMusicURL()));
-        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE);
-        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
-        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        downloadPath = Environment.getExternalStorageDirectory().getPath() + "/aticledaily/Assets/";
-        filename = musicBean.title + ".mp3";
-
-        File file = new File(downloadPath + filename);
-        exits = file.exists();
-        if (!exits) {
-            req.setDestinationInExternalPublicDir("/aticledaily/Assets/", musicBean.title + ".mp3");
-            DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            downloadID = downloadManager.enqueue(req);
-        }
-    }
     public void getPermission()
     {
         //getting permission
@@ -119,77 +122,105 @@ public class MusicList extends AppCompatActivity {
         imageView=(ImageView) findViewById(R.id.image);
         name=(TextView)findViewById(R.id.name);
         author=(TextView)findViewById(R.id.author);
-        play=(FloatingActionButton)findViewById(R.id.fab_play);
-        play.setImageResource(R.drawable.play);
-        play.setEnabled(false);
-        play.setOnClickListener(new View.OnClickListener() {
+        button=(Button)findViewById(R.id.playorpause);
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mediaPlayer.isPlaying())
-                {
-                    play.setImageResource(R.drawable.pause);
-                    mediaPlayer.pause();
-                }else{
-                    mediaPlayer.start();
-                }
+               if(isplaying){
+                   musicBinder.pause();
+                   isplaying=false;
+               }else {
+                   musicBinder.play();
+                   isplaying=true;
+               }
             }
         });
 
+        Progress=(SeekBar)findViewById(R.id.skbProgress);
 
-        //init view
         Glide.with(this)
                 .load(musicBean.getImgURL())
                 .apply(new RequestOptions().fitCenter()).into(imageView);
         name.setText(musicBean.title);
         author.setText(musicBean.author);
-
-
-        //init the seekbar
-       /* Progress=(SeekBar)findViewById(R.id.skbProgress);
-        Progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mediaPlayer.seekTo(seekBar.getProgress()*1000);
-            }
-        });*/
     }
 
-    public void initUrl()
-    {
+    public void download() {
+
+        DownloadManager.Request req = new DownloadManager.Request(Uri.parse(musicBean.getMusicURL()));
+        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE);
+        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
+        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        downloadPath = Environment.getExternalStorageDirectory().getPath() + "/aticledaily/Assets/";
+        filename = musicBean.title + ".mp3";
+
         File file=new File(downloadPath+filename);
         exits=file.exists();
-        Url=downloadPath+filename;
-    }
+        if (!exits) {
+            req.setDestinationInExternalPublicDir("/aticledaily/Assets/", musicBean.title + ".mp3");
+            DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            downloadID = downloadManager.enqueue(req);
 
-    public  void initMediaPlayer()
-    {
-        mediaPlayer=new MediaPlayer();
-        try{
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(Url);
-            mediaPlayer.prepare();
-            Toast.makeText(this,"MediaPlayer is prepareing",Toast.LENGTH_SHORT).show();
-        }catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-               play.setEnabled(true);
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            try{
+                mediaPlayer.setDataSource(musicBean.getMusicURL());
+                mediaPlayer.prepare();
+                Toast.makeText(context,"正在准备中",Toast.LENGTH_SHORT).show();
+            }catch (IOException e){
+                e.printStackTrace();
             }
-        });
+            Toast.makeText(context,"准备完成",Toast.LENGTH_SHORT).show();
+            mediaPlayer.start();
+        }else {
+            Intent intent=new Intent(this,MusicService.class);
+            bindService(intent,musicServiceConnection,BIND_AUTO_CREATE);
+            if(!(downloadPath+filename).equals(MusicService.src))
+            {
+                startService(intent);
+            }
+        }
     }
 
+    private ServiceConnection musicServiceConnection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            musicBinder=(MusicService.MusicBinder)service;
+            Progress.setMax(musicBinder.getDuration());
+
+            Progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    musicBinder.seekToPosition(Progress.getProgress()*1000);
+                }
+            });
+            handler.post(runnable);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    protected  void onDestroy(){
+        super.onDestroy();
+        if(musicServiceConnection!=null)
+        {
+            Intent intent=new Intent(this,MusicService.class);
+            stopService(intent);
+            unbindService(musicServiceConnection);
+        }
+        mediaPlayer.stop();
+    }
 
 }

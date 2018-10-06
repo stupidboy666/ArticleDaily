@@ -22,8 +22,13 @@
             </intent-filter>
         </activity>
         <activity android:name=".MusicList" />
-        <activity android:name=".Bookshow"></activity>
-        <activity android:name=".watched"/>
+        <activity android:name=".Bookshow" />
+        <activity android:name=".watched" />
+        <activity android:name=".bookedArticle"></activity>
+
+        <service android:name=".Service.MusicService"
+            android:enabled="true"
+            android:exported="true"/>
     </application>
 
 </manifest>

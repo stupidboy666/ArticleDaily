@@ -48,10 +48,10 @@ public class watched extends AppCompatActivity {
                     bookedlist.add(artical);
                 }
             }
-            articleAdapter=new ArticleAdapter(bookedlist);
+            articleAdapter=new ArticleAdapter(this,bookedlist);
         }
         else {
-            articleAdapter=new ArticleAdapter(list);
+            articleAdapter=new ArticleAdapter(this,list);
         }
 
         recyclerView.setAdapter(articleAdapter);
