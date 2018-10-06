@@ -16,77 +16,6 @@ import java.io.IOException;
 
 public class MusicService extends Service {
 
-    /*public static String src;
-    private MediaPlayer mediaPlayer;
-    private MusicBinder musicBinder;
-
-    public void onCreate()
-    {
-        super.onCreate();
-        mediaPlayer=new MediaPlayer();
-    }
-
-    public int onStartCommand(Intent intent,int flags,int startId)
-    {
-        try{
-            mediaPlayer.reset();
-            src=MusicList.downloadPath+MusicList.filename;
-            mediaPlayer.setDataSource(src);
-            mediaPlayer.setLooping(true);
-            mediaPlayer.prepare();
-        }catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        mediaPlayer.start();
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    public void onDestroy()
-    {
-        super.onDestroy();
-        mediaPlayer.release();
-        mediaPlayer=null;
-    }
-
-
-    public IBinder onBind(Intent intent)
-    {
-        return musicBinder;
-    }
-
-
-    public class MusicBinder extends Binder {
-        public void play()
-        {
-            if (!mediaPlayer.isPlaying()){
-                mediaPlayer.start();
-            }
-        }
-
-        public void pause(){
-            if (mediaPlayer.isPlaying()){
-                mediaPlayer.pause();
-            }
-        }
-
-        public int getProgress(){
-            return mediaPlayer.getCurrentPosition()/1000;
-        }
-
-        public int getDuration(){
-            return mediaPlayer.getDuration()/1000;
-        }
-
-        public void seekToPosition(int sec){
-            mediaPlayer.seekTo(sec);
-        }
-
-
-    }*/
-
-
-
     private String url;
     private MediaPlayer mediaPlayer;
     boolean isStopThread;
@@ -159,6 +88,7 @@ public class MusicService extends Service {
 
             mediaPlayer.setLooping(true);
             mediaPlayer.prepareAsync();
+            MusicList.button.setEnabled(false);
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
@@ -167,6 +97,7 @@ public class MusicService extends Service {
                     message.what=1;
                     message.arg1=duration;
                     MusicList.handler.sendMessage(message);
+                    MusicList.button.setEnabled(true);
                 }
             });
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
