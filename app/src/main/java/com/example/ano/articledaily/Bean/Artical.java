@@ -7,7 +7,7 @@ import org.litepal.crud.LitePalSupport;
 import java.lang.invoke.VolatileCallSite;
 import java.util.List;
 
-public class Artical extends LitePalSupport {
+public class Artical {
     public String title;
     public String authour;
     public String content;

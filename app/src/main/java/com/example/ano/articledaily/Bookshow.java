@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.example.ano.articledaily.Bean.Book;
 
@@ -20,5 +21,13 @@ public class Bookshow extends AppCompatActivity {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setSupportZoom(true);
         webView.loadUrl(book.bookUrl);
+
+        webView.setWebViewClient(new WebViewClient(){
+            public boolean shouldOverrideUrlLoading(WebView view, String url){
+
+                view.loadUrl(url);
+                return true;
+            }
+        });
     }
 }
