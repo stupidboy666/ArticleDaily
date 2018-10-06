@@ -26,7 +26,7 @@ public class watched extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        
+
         RecyclerView recyclerView=(RecyclerView)findViewById(R.id.articl_recycler);
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);

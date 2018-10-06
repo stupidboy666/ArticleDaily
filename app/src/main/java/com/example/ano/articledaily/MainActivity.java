@@ -1,5 +1,9 @@
 package com.example.ano.articledaily;
 
+import android.content.Context;
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -28,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawer;
     TabLayout mTab;
     ViewPager mViewPager;
+    NavigationView navigationView;
+    Context context=this;
 
 
     @Override
@@ -44,13 +50,31 @@ public class MainActivity extends AppCompatActivity {
        Toolbar toolbar=(Toolbar)findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         mDrawer=(DrawerLayout)findViewById(R.id.drawer_layout);
+        navigationView=(NavigationView)findViewById(R.id.nav_view);
         ActionBar actionBar=getSupportActionBar();
         if (actionBar!=null)
         {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
-
+        
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId())
+                {
+                    case R.id.booked:
+                        Intent intent=new Intent(context,watched.class);
+                        startActivity(intent);
+                        break;
+                    case R.id.nav_watched:
+                        Intent intent1=new Intent(context,watched.class);
+                        startActivity(intent1);
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
     //init view page
