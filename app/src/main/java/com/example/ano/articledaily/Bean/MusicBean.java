@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class MusicBean extends LitePalSupport implements Serializable
 {
     public String author;
-    String musicURL;
+    public String musicURL;
     public String imgURL;
     public String title;
 

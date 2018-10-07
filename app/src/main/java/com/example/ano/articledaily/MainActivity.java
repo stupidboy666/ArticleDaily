@@ -1,22 +1,33 @@
 package com.example.ano.articledaily;
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.widget.TableLayout;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
 
 import com.example.ano.articledaily.Fragment.ArticleFra;
 import com.example.ano.articledaily.Fragment.BooksFrag;
@@ -36,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     ViewPager mViewPager;
     NavigationView navigationView;
     Context context=this;
+    private IntentFilter intentFilter;
+    private NetWorkChangeReciever netWorkChangeReciever;
 
 
     @Override
@@ -48,6 +61,11 @@ public class MainActivity extends AppCompatActivity {
          */
         InitView();
         LitePal.initialize(this);
+
+        intentFilter=new IntentFilter();
+        intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        netWorkChangeReciever=new NetWorkChangeReciever();
+        registerReceiver(netWorkChangeReciever,intentFilter);
 
         //set the drawerlayout
        Toolbar toolbar=(Toolbar)findViewById(R.id.tool_bar);
@@ -79,6 +97,31 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+    }
+
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        unregisterReceiver(netWorkChangeReciever);
+    }
+
+
+    class NetWorkChangeReciever extends BroadcastReceiver {
+        public void onReceive(Context context,Intent intent)
+        {
+            ConnectivityManager connectivityManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
+            if(networkInfo!=null&&networkInfo.isConnected()){
+                Toast.makeText(context,"网络正常",Toast.LENGTH_SHORT).show();
+            }else{
+                AlertDialog.Builder dialog=new AlertDialog.Builder(context);
+                dialog.setTitle("Network is not available!");
+                dialog.setCancelable(true);
+                dialog.setMessage("Please check your network!!!");
+                dialog.show();
+            }
+        }
     }
 
     //init view page

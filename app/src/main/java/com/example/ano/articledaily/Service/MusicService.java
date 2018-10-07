@@ -1,16 +1,19 @@
 package com.example.ano.articledaily.Service;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.app.NotificationCompat;
 
-import com.example.ano.articledaily.MainActivity;
 import com.example.ano.articledaily.MusicList;
-
-import org.greenrobot.eventbus.EventBus;
+import com.example.ano.articledaily.R;
 
 import java.io.IOException;
 
@@ -20,18 +23,35 @@ public class MusicService extends Service {
     private MediaPlayer mediaPlayer;
     boolean isStopThread;
 
+    private NotificationManager notificationManager;
+    private Notification notification;
+
     public void onCreate()
     {
         super.onCreate();
+        MusicList.button.setEnabled(false);
         mediaPlayer=new MediaPlayer();
+
+        notificationManager=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        Intent intent1=new Intent(this,MusicList.class);
+        PendingIntent pendingIntent=PendingIntent.getActivity(this,0,intent1,PendingIntent.FLAG_UPDATE_CURRENT);
+        notification=new NotificationCompat.Builder(this,"music")
+                .setContentTitle("the music is playing ")
+                .setContentText(MusicList.musicBean.title)
+                .setWhen(System.currentTimeMillis())
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher))
+                .build();
+        notificationManager.notify(1,notification);
     }
+
 
     public class  MyBinder extends Binder{
 
         public void play()
         {
             mediaPlayer.start();
-            updateSeekBar();
         }
 
         public void pause(){
@@ -46,29 +66,17 @@ public class MusicService extends Service {
             mediaPlayer.start();
         }
 
-        private void updateSeekBar()
-        {
-            new Thread(){
-                public void run(){
-                    while (!isStopThread){
-                        try{
-                            int currentPosition=mediaPlayer.getCurrentPosition();
-                            Message message=Message.obtain();
-                            message.what=3;
-                            message.arg1=currentPosition;
-                            MusicList.handler.sendMessage(message);
 
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }.start();
+        public int getProgress(){
+            return mediaPlayer.getCurrentPosition()/1000;
         }
 
-        public long getCurrentPosition()
-        {
-            return 0;
+        public int getDuration(){
+            return mediaPlayer.getDuration()/1000;
+        }
+
+        public boolean getStatus(){
+            return mediaPlayer.isPlaying();
         }
 
         public void seekToPosition(int position)
@@ -88,7 +96,6 @@ public class MusicService extends Service {
 
             mediaPlayer.setLooping(true);
             mediaPlayer.prepareAsync();
-            MusicList.button.setEnabled(false);
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
@@ -96,14 +103,7 @@ public class MusicService extends Service {
                     Message message=Message.obtain();
                     message.what=1;
                     message.arg1=duration;
-                    MusicList.handler.sendMessage(message);
                     MusicList.button.setEnabled(true);
-                }
-            });
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    MusicList.handler.sendEmptyMessage(2);
                 }
             });
         }catch (IOException e)
@@ -120,7 +120,7 @@ public class MusicService extends Service {
         if(mediaPlayer.isPlaying())
             mediaPlayer.release();
         mediaPlayer=null;
-
+        notificationManager.cancelAll();
         return  super.onUnbind(intent);
     }
 }

@@ -6,11 +6,14 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -47,6 +50,7 @@ import com.example.ano.articledaily.Player.MusicPlayer;
 import com.example.ano.articledaily.Service.MusicService;
 import com.yhd.hdmediaplayer.MediaPlayerHelper;
 
+import org.greenrobot.eventbus.EventBus;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -58,7 +62,8 @@ import java.util.TimerTask;
 
 
 public class MusicList extends AppCompatActivity implements View.OnClickListener {
-    private MusicBean musicBean;
+    public static MusicBean musicBean;
+    private DownloadManager downloadManager;
     public static Notification notification;
     private static NotificationManager notificationManager;
     private static int duration;//音频总长度
@@ -69,7 +74,7 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
     FloatingActionButton play;
     MediaPlayer mediaPlayer=new MediaPlayer();
     long downloadID;
-    public static String downloadPath,filename;
+    public static String downloadPath,filename,downloadPath2,filename2;
     Boolean exits;
     private static SeekBar Progress;
     private boolean isplaying =true;
@@ -79,28 +84,40 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
     private  MyConn myConn;
     public static Button button;
     private String PLAYER_TAG;
+    private Timer timer=new Timer();
 
-    public static Handler handler=new Handler(){
+
+    private TimerTask timertask = new TimerTask() {
         @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what){
-                case 1:
-                    duration=msg.arg1;
-                    Progress.setMax(duration);
-                    break;
-                case 2:
-                    status=3;
-                    Progress.setProgress(0);
-                    break;
-                case 3:
-                    if(status==3) return;
-                    currentPosition=msg.arg2;
-                    Progress.setProgress(currentPosition);
-                    break;
+        public void run() {
+            try {
+                    handler.sendEmptyMessage(1);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
+    Handler handler=new Handler()
+   {
+       @Override
+       public void handleMessage(Message msg) {
+           super.handleMessage(msg);
+           switch (msg.what) {
+               case 1:
+                   try {
+                       if(myBinder!=null&&myConn!=null){
+                           Progress.setProgress(myBinder.getProgress());
+                       }
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }
+                   //handler.sendEmptyMessageDelayed(UPDATE);
+                   handler.sendEmptyMessageDelayed(1,500);
+                   break;
+           }
+       }
 
+   };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +129,6 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
 
         getPermission();
         initView();
-        initNotification();
         File file=new File(downloadPath+filename);
         exits=file.exists();
 
@@ -138,11 +154,15 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
         public void onServiceConnected(ComponentName name, IBinder service) {
             //获取中间人对象
             myBinder = (MusicService.MyBinder) service;
+            Progress.setMax(myBinder.getDuration());
+            timer.schedule(timertask,0,500);
 
         }
         @Override
         public void onServiceDisconnected(ComponentName name) {
-        }
+
+            }
+
     }
     public void getPermission()
     {
@@ -163,6 +183,8 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
         author = (TextView) findViewById(R.id.author);
         button = (Button) findViewById(R.id.playorpause);
         button.setOnClickListener(this);
+        name.setText(musicBean.title);
+        author.setText(musicBean.author);
 
         Progress = (SeekBar) findViewById(R.id.skbProgress);
         Progress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -180,6 +202,7 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
             public void onStopTrackingTouch(SeekBar seekBar) {
                 myBinder.seekToPosition(seekBar.getProgress());
             }
+
         });
 
         Glide.with(context)
@@ -190,41 +213,13 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
     }
 
 
-    //初始化通知栏
-    public void initNotification()
-    {
-        notificationManager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder mBuilder=new NotificationCompat.Builder(this,"voice");
-        notification=new Notification();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel=new NotificationChannel("voice","通知栏",NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(channel);
-        }
 
-        RemoteViews remoteViews=new RemoteViews(getPackageName(),R.layout.notification);
-        remoteViews.setTextViewText(R.id.ntfTitle,musicBean.title);
-        remoteViews.setTextViewText(R.id.ntfAuthor,musicBean.author);
-        remoteViews.setImageViewResource(R.id.playOrPause,R.drawable.pause);
-        remoteViews.setImageViewResource(R.id.close,R.drawable.close);
-
-        Intent intentPause=new Intent(PLAYER_TAG);
-        intentPause.putExtra("STATUS","pause");
-        PendingIntent pIntentPause=PendingIntent.getBroadcast(this,2,intentPause,PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.playOrPause,pIntentPause);
-
-        Intent notificationIntent=new Intent(this,MusicList.class);
-        PendingIntent intent=PendingIntent.getActivity(this,0,notificationIntent,0);
-        mBuilder.setContent(remoteViews)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(intent);
-
-        notification=mBuilder.build();
-        notification.flags= Notification.FLAG_NO_CLEAR;//滑动或点击时不被清除
-        notificationManager.notify(PLAYER_TAG,111,notification);
-    }
 
     public  void onClick(View v){
-        if(myConn!=null){
+        if(myConn==null){
+          Toast.makeText(this,"Downloading,please wait a moment",Toast.LENGTH_SHORT).show();
+          checkStatus();
+        }else {
             switch (status){
                 case 0://初始状态
                     //播放
@@ -255,38 +250,8 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
                     button.setText("暂停");
                     break;
             }
-        }else {
-            switch (status) {
-                case 0://初始状态
-                    //播
-                    mediaPlayer.start();
-                    status = 2;
-                    button.setText("暂停");
-                    break;
-
-                case 1://暂停
-                    //继续播放
-                    mediaPlayer.start();
-                    status = 2;
-                    button.setText("暂停");
-                    break;
-
-                case 2://播放中
-                    //暂停
-                    mediaPlayer.pause();
-                    status = 1;
-                    button.setText("继续播放");
-
-                    break;
-
-                case 3://播放完成
-                    //重新开始
-                    mediaPlayer.start();
-                    status = 2;
-                    button.setText("暂停");
-                    break;
-            }
         }
+
     }
 
     public void download() {
@@ -295,52 +260,62 @@ public class MusicList extends AppCompatActivity implements View.OnClickListener
         req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE);
         req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
         req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        DownloadManager.Request req2 = new DownloadManager.Request(Uri.parse(musicBean.getImgURL()));
+        req2.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         downloadPath = Environment.getExternalStorageDirectory().getPath() + "/aticledaily/Assets/";
+        downloadPath2=Environment.getDownloadCacheDirectory().getPath()+"/aticledaily/Music/";
         filename = musicBean.title + ".mp3";
+        filename2=musicBean.title+".png";
 
         File file=new File(downloadPath+filename);
         exits=file.exists();
         if (!exits) {
             req.setDestinationInExternalPublicDir("/aticledaily/Assets/", musicBean.title + ".mp3");
-            DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            req2.setDestinationInExternalPublicDir("/aticledaily/Musics/",musicBean.title+".png");
+            downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             downloadID = downloadManager.enqueue(req);
-
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            try{
-                mediaPlayer.setDataSource(musicBean.getMusicURL());
-                button.setEnabled(false);
-                Toast.makeText(context,"音频正在准备中",Toast.LENGTH_LONG).show();
-                mediaPlayer.prepareAsync();
-                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        mediaPlayer.start();
-                        button.setEnabled(true);
-                    }
-                });
-
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-
+            downloadManager.enqueue(req2);
         }else {
             myConn=new MyConn();
             Intent intent=new Intent(this,MusicService.class);
             bindService(intent,myConn,BIND_AUTO_CREATE);
-                startService(intent);
+        }
+    }
+
+    private void checkStatus()
+    {
+        File file=new File(downloadPath+filename);
+        exits=file.exists();
+        if(exits)
+        {
+            myConn=new MyConn();
+            Intent intent=new Intent(this,MusicService.class);
+            bindService(intent,myConn,BIND_AUTO_CREATE);
+            musicBean.imgURL=filename2;
+            musicBean.musicURL=filename;
+            musicBean.save();
         }
     }
 
 
     protected  void onDestroy(){
         super.onDestroy();
-        unbindService(myConn);
-        myConn=null;
+        if(myConn!=null){
+            unbindService(myConn);
+            myConn=null;
+        }
+        if (timer!=null){
+            timer.cancel();
+            timer.purge();
+            timer=null;
+        }
+
         if(mediaPlayer!=null)
         {
             mediaPlayer.release();
             mediaPlayer=null;
         }
+
     }
 
 }
